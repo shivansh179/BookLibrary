@@ -3,7 +3,8 @@ import React, { useState } from 'react';
 import { useBookshelf } from '../BookshelfContext';
 import BookCard from '../BookCard';
 import { Link } from 'react-router-dom';
-import { ToastContainer, toast } from 'react-toast';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const colors = [
   'bg-red-200',
@@ -29,11 +30,16 @@ const Home = ({ books }) => {
       // Store bookshelf in localStorage
       localStorage.setItem('bookshelf', JSON.stringify([...bookshelf, book]));
       toast.success("Book added to bookshelf");
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500); // Adjust the delay as needed
     } else {
       toast.info("Book is already in your bookshelf");
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500); // Adjust the delay as needed
     }
   };
-  
 
   const handleSearchChange = (e) => {
     const value = e.target.value;
@@ -107,7 +113,7 @@ const Home = ({ books }) => {
       <div className="text-center mt-2">
         Page {currentPage} of {Math.ceil(booksToDisplay.length / 10)}
       </div>
-      <ToastContainer/>
+      <ToastContainer />
     </div>
   );
 };
