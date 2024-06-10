@@ -1,6 +1,9 @@
-import React, { useState, useEffect } from 'react';
+// Home.js
+import React, { useState } from 'react';
 import { useBookshelf } from '../BookshelfContext';
 import BookCard from '../BookCard';
+import { Link } from 'react-router-dom';
+import { ToastContainer, toast } from 'react-toast';
 
 const colors = [
   'bg-red-200',
@@ -17,13 +20,20 @@ const Home = ({ books }) => {
   const [searchValue, setSearchValue] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const { addToBookshelf, bookshelf } = useBookshelf();
-  const [addedBooks, setAddedBooks] = useState(bookshelf || []); // Initialize with existing bookshelf or empty array
   const [currentPage, setCurrentPage] = useState(1);
 
   const handleAddToBookshelf = (book) => {
-    addToBookshelf(book);
-    setAddedBooks([...addedBooks, book]); // Update local state with entire book object for accurate tracking
+    const isBookInBookshelf = bookshelf.some((shelfBook) => shelfBook.id === book.id);
+    if (!isBookInBookshelf) {
+      addToBookshelf(book);
+      // Store bookshelf in localStorage
+      localStorage.setItem('bookshelf', JSON.stringify([...bookshelf, book]));
+      toast.success("Book added to bookshelf");
+    } else {
+      toast.info("Book is already in your bookshelf");
+    }
   };
+  
 
   const handleSearchChange = (e) => {
     const value = e.target.value;
@@ -43,17 +53,6 @@ const Home = ({ books }) => {
   const indexOfFirstBook = indexOfLastBook - 10;
   const currentBooks = booksToDisplay.slice(indexOfFirstBook, indexOfLastBook);
 
-  const isBookAdded = (book) => {
-    return addedBooks.some((addedBook) => addedBook.id === book.id); // Check for book object ID match
-  };
-
-  // Persist addedBooks to BookshelfContext (optional)
-  useEffect(() => {
-    if (addedBooks.length !== bookshelf.length) {
-      addToBookshelf(addedBooks); // Update bookshelf with entire book objects
-    }
-  }, [addedBooks, bookshelf, addToBookshelf]);
-
   const nextPage = () => {
     setCurrentPage((prevPage) => prevPage + 1);
   };
@@ -72,22 +71,19 @@ const Home = ({ books }) => {
           value={searchValue}
           onChange={handleSearchChange}
         />
-        <a href="/Bookshelf" className="bg-green-500 hover:bg-green-700 rounded-lg   text-white font-bold ml-4 py-1 px-4 ">
+        <Link to="/Bookshelf" className="bg-green-500 hover:bg-green-700 rounded-lg text-white font-bold ml-4 py-1 px-4">
           My Bookshelf
-        </a>
+        </Link>
       </div>
       <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {currentBooks.map((book, index) => (
           <div key={book.id || index} className="relative">
             <BookCard book={book} colorClass={colors[index % colors.length]} />
             <button
-              className={`absolute bottom-0 left-0 ml-4 w-full py-1 rounded-b-lg text-sm font-semibold hover:bg-green-600 ${
-                isBookAdded(book) ? 'bg-green-500 text-white disabled' : 'bg-green-500 text-white'
-              }`}
+              className="absolute bottom-0 left-0 ml-4 w-full py-1 rounded-b-lg text-sm font-semibold bg-green-500 text-white"
               onClick={() => handleAddToBookshelf(book)}
-              disabled={isBookAdded(book)}
             >
-              {isBookAdded(book) ? 'Added' : 'Add'}
+              Add to my bookshelf
             </button>
           </div>
         ))}
@@ -111,6 +107,7 @@ const Home = ({ books }) => {
       <div className="text-center mt-2">
         Page {currentPage} of {Math.ceil(booksToDisplay.length / 10)}
       </div>
+      <ToastContainer/>
     </div>
   );
 };
